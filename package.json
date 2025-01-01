@@ -5,15 +5,17 @@
   "scripts": {
     "clean": "rimraf dist dist-electron",
     "dev": "cross-env NODE_ENV=development vite",
-    "build": "node scripts/build.js",
+    "build": "npm run clean && cross-env NODE_ENV=production tsc && vite build && electron-builder --mac",
     "preview": "vite preview",
     "electron:dev": "tsc -p electron/tsconfig.json && electron .",
     "app:dev": "concurrently \"cross-env NODE_ENV=development vite\" \"wait-on http://localhost:5173 && cross-env electron .\"",
     "app:build": "npm run build",
-    "watch": "tsc -p electron/tsconfig.json --watch"
+    "watch": "tsc -p electron/tsconfig.json --watch",
+    "app:dir": "electron-builder --dir",
+    "app:dist": "electron-builder"
   },
   "build": {
-    "appId": "interview.coder.id",
+    "appId": "com.chunginlee.interviewcoder",
     "productName": "Interview Coder",
     "files": [
       "dist/**/*",
@@ -28,14 +30,21 @@
     "mac": {
       "category": "public.app-category.developer-tools",
       "target": [
-        "dmg",
-        "zip"
+        {
+          "target": "dmg",
+          "arch": "x64"
+        },
+        {
+          "target": "dmg",
+          "arch": "arm64"
+        }
       ],
       "icon": "assets/icons/mac/icon.icns",
       "hardenedRuntime": true,
       "gatekeeperAssess": false,
       "entitlements": "build/entitlements.mac.plist",
-      "entitlementsInherit": "build/entitlements.mac.plist"
+      "entitlementsInherit": "build/entitlements.mac.plist",
+      "identity": "Chungin Lee (7JVNAY4725)"
     },
     "win": {
       "target": [
@@ -60,6 +69,7 @@
   "license": "ISC",
   "description": "An invisible desktop application to help you pass your technical interviews.",
   "devDependencies": {
+    "@electron/notarize": "^2.3.0",
     "@types/color": "^4.2.0",
     "@types/diff": "^6.0.0",
     "@types/electron": "^1.4.38",

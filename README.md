@@ -2,9 +2,7 @@
 
 An invisible desktop application that will help you pass your technical interviews.
 
-
 https://github.com/user-attachments/assets/caf1e6cd-27d5-4033-b8c5-9df1cb52b21d
-
 
 ## Invisibility Compatibility
 
@@ -13,13 +11,13 @@ The application is invisible to:
 - Zoom versions below 6.1.6 (inclusive)
 - All browser-based screen recording software
 - All versions of Discord
-- Mac OS screenshot functionality (Command + Shift + 3/4)
+- Mac OS _screenshot_ functionality (Command + Shift + 3/4/5)
 
 Note: The application is **NOT** invisible to:
 
 - Zoom versions 6.1.6 and above
-     - https://zoom.en.uptodown.com/mac/versions (link to downgrade Zoom if needed)
-- Mac OS native screen recording (Command + Shift + 5)
+  - https://zoom.en.uptodown.com/mac/versions (link to downgrade Zoom if needed)
+- Mac OS native screen _recording_ (Command + Shift + 5)
 
 ## Features
 
@@ -39,6 +37,7 @@ The application uses unidentifiable global keyboard shortcuts that won't be dete
 - Take Screenshot: [Control or Cmd + H]
 - Process Screenshots: [Control or Cmd + Enter]
 - Reset View: [Control or Cmd + R]
+- Quit: [Control or Cmd + Q]
 
 ## Usage
 
@@ -49,9 +48,8 @@ The application uses unidentifiable global keyboard shortcuts that won't be dete
 
 2. **Capturing Problem**
 
-   - Use global shortcut to take screenshots
-   - Capture question text and code separately for better analysis
-   - Screenshots are automatically added to the processing queue
+   - Use global shortcut [Control or Cmd + H] to take screenshots
+   - Screenshots are automatically added to the queue of up to 5.
 
 3. **Processing**
 
@@ -123,18 +121,6 @@ This will:
 - Launch the Electron application
 - Enable hot-reloading for development
 
-## Building for Production
-
-To create a production build:
-
-```bash
-npm run app:build
-# or
-bun run app:build
-```
-
-The built application will be available in the `release` directory.
-
 ## Tech Stack
 
 - Electron
@@ -149,6 +135,49 @@ The built application will be available in the `release` directory.
 
 1. On first launch, you'll need to provide your OpenAI API key
 2. The application will store your settings locally using electron-store
+
+## Building (for Roy)
+
+notarizing script is wack asf, we have an auto code signing in the package.json, but we need to manually notarize
+
+```
+xcrun notarytool store-credentials "my-apple-creds" \
+  --apple-id "YOUR_APPLE_ID@example.com" \
+  --team-id "YOUR_TEAM_ID" \
+  --password "XXXX-XXXX-XXXX-XXXX"
+```
+
+run that ^ and then cd into release and run
+
+```
+
+
+#intel
+arch -arm64 xcrun notarytool submit "/Users/roylee0912/Development/interview-coder/release/Interview Coder-1.0.0.dmg" \
+  --keychain-profile "my-apple-creds" \
+  --wait
+
+
+#silicon
+arch -arm64 xcrun notarytool submit "/Users/roylee0912/Development/interview-coder/release/Interview Coder-1.0.0-arm64.dmg" \
+  --keychain-profile "my-apple-creds" \
+  --wait
+
+
+
+xcrun stapler staple "Interview Coder-1.0.0.dmg"
+
+
+xcrun stapler staple "Interview Coder-1.0.0-arm64.dmg"
+
+#validating
+
+xcrun stapler validate "/Users/roylee0912/Development/interview-coder/release/Interview Coder-1.0.0.dmg"
+
+xcrun stapler validate "/Users/roylee0912/Development/interview-coder/release/Interview Coder-1.0.0-arm64.dmg"
+
+
+```
 
 ## Contributing
 
