@@ -494,6 +494,8 @@ function AppContent({ isInitialized }: { isInitialized: boolean }) {
     } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null)
       setLoading(false)
+      // Set auth token in window object
+      window.__AUTH_TOKEN__ = session?.access_token ?? null
     })
 
     return () => subscription.unsubscribe()

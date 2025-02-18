@@ -93,6 +93,57 @@ export class ProcessingHelper {
     }
   }
 
+  private async getAuthToken(): Promise<string | null> {
+    const mainWindow = this.deps.getMainWindow()
+    if (!mainWindow) return null
+
+    try {
+      await this.waitForInitialization(mainWindow)
+      const token = await mainWindow.webContents.executeJavaScript(
+        "window.__AUTH_TOKEN__"
+      )
+
+      if (typeof token !== "string" || !token) {
+        console.warn("Auth token not properly initialized")
+        return null
+      }
+
+      return token
+    } catch (error) {
+      console.error("Error getting auth token:", error)
+      return null
+    }
+  }
+
+  private async makeAuthenticatedRequest(
+    endpoint: string,
+    data: any,
+    signal: AbortSignal
+  ) {
+    const token = await this.getAuthToken()
+    const mainWindow = this.deps.getMainWindow()
+
+    if (!token) {
+      if (mainWindow) {
+        mainWindow.webContents.send(this.deps.PROCESSING_EVENTS.UNAUTHORIZED)
+      }
+      throw new Error("Not authenticated")
+    }
+
+    return axios.post(`${API_BASE_URL}${endpoint}`, data, {
+      signal,
+      timeout: 300000,
+      validateStatus: function (status) {
+        return status < 500
+      },
+      maxRedirects: 5,
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      }
+    })
+  }
+
   public async processScreenshots(): Promise<void> {
     const mainWindow = this.deps.getMainWindow()
     if (!mainWindow) return
@@ -266,20 +317,10 @@ export class ProcessingHelper {
 
         // First API call - extract problem info
         try {
-          const extractResponse = await axios.post(
-            `${API_BASE_URL}/api/extract`,
+          const extractResponse = await this.makeAuthenticatedRequest(
+            "/api/extract",
             { imageDataList, language },
-            {
-              signal,
-              timeout: 300000,
-              validateStatus: function (status) {
-                return status < 500
-              },
-              maxRedirects: 5,
-              headers: {
-                "Content-Type": "application/json"
-              }
-            }
+            signal
           )
 
           problemInfo = extractResponse.data
@@ -325,6 +366,19 @@ export class ProcessingHelper {
             message: error.message,
             code: error.code
           })
+
+          // Handle authentication errors
+          if (error.response?.status === 401) {
+            if (mainWindow) {
+              mainWindow.webContents.send(
+                this.deps.PROCESSING_EVENTS.UNAUTHORIZED
+              )
+            }
+            return {
+              success: false,
+              error: "Not authenticated. Please sign in again."
+            }
+          }
 
           // Handle API-specific errors
           if (
@@ -380,25 +434,26 @@ export class ProcessingHelper {
         throw new Error("No problem info available")
       }
 
-      const response = await axios.post(
-        `${API_BASE_URL}/api/generate`,
+      const response = await this.makeAuthenticatedRequest(
+        "/api/generate",
         { ...problemInfo, language },
-        {
-          signal,
-          timeout: 300000,
-          validateStatus: function (status) {
-            return status < 500
-          },
-          maxRedirects: 5,
-          headers: {
-            "Content-Type": "application/json"
-          }
-        }
+        signal
       )
 
       return { success: true, data: response.data }
     } catch (error: any) {
       const mainWindow = this.deps.getMainWindow()
+
+      // Handle authentication errors
+      if (error.response?.status === 401) {
+        if (mainWindow) {
+          mainWindow.webContents.send(this.deps.PROCESSING_EVENTS.UNAUTHORIZED)
+        }
+        return {
+          success: false,
+          error: "Not authenticated. Please sign in again."
+        }
+      }
 
       // Handle timeout errors (both 504 and axios timeout)
       if (error.code === "ECONNABORTED" || error.response?.status === 504) {
@@ -461,25 +516,26 @@ export class ProcessingHelper {
         throw new Error("No problem info available")
       }
 
-      const response = await axios.post(
-        `${API_BASE_URL}/api/debug`,
+      const response = await this.makeAuthenticatedRequest(
+        "/api/debug",
         { imageDataList, problemInfo, language },
-        {
-          signal,
-          timeout: 300000,
-          validateStatus: function (status) {
-            return status < 500
-          },
-          maxRedirects: 5,
-          headers: {
-            "Content-Type": "application/json"
-          }
-        }
+        signal
       )
 
       return { success: true, data: response.data }
     } catch (error: any) {
       const mainWindow = this.deps.getMainWindow()
+
+      // Handle authentication errors
+      if (error.response?.status === 401) {
+        if (mainWindow) {
+          mainWindow.webContents.send(this.deps.PROCESSING_EVENTS.UNAUTHORIZED)
+        }
+        return {
+          success: false,
+          error: "Not authenticated. Please sign in again."
+        }
+      }
 
       // Handle cancellation first
       if (axios.isCancel(error)) {
