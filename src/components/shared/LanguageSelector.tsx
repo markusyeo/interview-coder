@@ -1,37 +1,21 @@
-import React from "react"
-import { supabase } from "../../lib/supabase"
+import React from "react";
 
 interface LanguageSelectorProps {
-  currentLanguage: string
-  setLanguage: (language: string) => void
+  currentLanguage: string;
+  setLanguage: (language: string) => void;
 }
 
 export const LanguageSelector: React.FC<LanguageSelectorProps> = ({
   currentLanguage,
-  setLanguage
+  setLanguage,
 }) => {
   const handleLanguageChange = async (
     e: React.ChangeEvent<HTMLSelectElement>
   ) => {
-    const newLanguage = e.target.value
-    const {
-      data: { user }
-    } = await supabase.auth.getUser()
-
-    if (user) {
-      const { error } = await supabase
-        .from("subscriptions")
-        .update({ preferred_language: newLanguage })
-        .eq("user_id", user.id)
-
-      if (error) {
-        console.error("Error updating language:", error)
-      } else {
-        window.__LANGUAGE__ = newLanguage
-        setLanguage(newLanguage)
-      }
-    }
-  }
+    const newLanguage = e.target.value;
+    window.__LANGUAGE__ = newLanguage;
+    setLanguage(newLanguage);
+  };
 
   return (
     <div className="mb-3 px-2 space-y-1">
@@ -55,5 +39,5 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = ({
         </select>
       </div>
     </div>
-  )
-}
+  );
+};

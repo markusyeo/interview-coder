@@ -1,25 +1,25 @@
 // Solutions.tsx
-import React, { useState, useEffect, useRef } from "react"
-import { useQuery, useQueryClient } from "@tanstack/react-query"
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
-import { dracula } from "react-syntax-highlighter/dist/esm/styles/prism"
+import React, { useState, useEffect, useRef } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { dracula } from "react-syntax-highlighter/dist/esm/styles/prism";
 
-import ScreenshotQueue from "../components/Queue/ScreenshotQueue"
+import ScreenshotQueue from "../components/Queue/ScreenshotQueue";
 
-import { ProblemStatementData } from "../types/solutions"
-import SolutionCommands from "../components/Solutions/SolutionCommands"
-import Debug from "./Debug"
-import { useToast } from "../contexts/toast"
-import { COMMAND_KEY } from "../utils/platform"
+import { ProblemStatementData } from "../types/solutions";
+import SolutionCommands from "../components/Solutions/SolutionCommands";
+import Debug from "./Debug";
+import { useToast } from "../contexts/toast";
+import { COMMAND_KEY } from "../utils/platform";
 
 export const ContentSection = ({
   title,
   content,
-  isLoading
+  isLoading,
 }: {
-  title: string
-  content: React.ReactNode
-  isLoading: boolean
+  title: string;
+  content: React.ReactNode;
+  isLoading: boolean;
 }) => (
   <div className="space-y-2">
     <h2 className="text-[13px] font-medium text-white tracking-wide">
@@ -37,17 +37,17 @@ export const ContentSection = ({
       </div>
     )}
   </div>
-)
+);
 const SolutionSection = ({
   title,
   content,
   isLoading,
-  currentLanguage
+  currentLanguage,
 }: {
-  title: string
-  content: React.ReactNode
-  isLoading: boolean
-  currentLanguage: string
+  title: string;
+  content: React.ReactNode;
+  isLoading: boolean;
+  currentLanguage: string;
 }) => (
   <div className="space-y-2">
     <h2 className="text-[13px] font-medium text-white tracking-wide">
@@ -73,7 +73,7 @@ const SolutionSection = ({
             padding: "1rem",
             whiteSpace: "pre-wrap",
             wordBreak: "break-all",
-            backgroundColor: "rgba(22, 27, 34, 0.5)"
+            backgroundColor: "rgba(22, 27, 34, 0.5)",
           }}
           wrapLongLines={true}
         >
@@ -82,16 +82,16 @@ const SolutionSection = ({
       </div>
     )}
   </div>
-)
+);
 
 export const ComplexitySection = ({
   timeComplexity,
   spaceComplexity,
-  isLoading
+  isLoading,
 }: {
-  timeComplexity: string | null
-  spaceComplexity: string | null
-  isLoading: boolean
+  timeComplexity: string | null;
+  spaceComplexity: string | null;
+  isLoading: boolean;
 }) => (
   <div className="space-y-2">
     <h2 className="text-[13px] font-medium text-white tracking-wide">
@@ -118,203 +118,201 @@ export const ComplexitySection = ({
       </div>
     )}
   </div>
-)
+);
 
 export interface SolutionsProps {
-  setView: (view: "queue" | "solutions" | "debug") => void
-  credits: number
-  currentLanguage: string
-  setLanguage: (language: string) => void
+  setView: (view: "queue" | "solutions" | "debug") => void;
+  currentLanguage: string;
+  setLanguage: (language: string) => void;
 }
 const Solutions: React.FC<SolutionsProps> = ({
   setView,
-  credits,
   currentLanguage,
-  setLanguage
+  setLanguage,
 }) => {
-  const queryClient = useQueryClient()
-  const contentRef = useRef<HTMLDivElement>(null)
+  const queryClient = useQueryClient();
+  const contentRef = useRef<HTMLDivElement>(null);
 
-  const [debugProcessing, setDebugProcessing] = useState(false)
+  const [debugProcessing, setDebugProcessing] = useState(false);
   const [problemStatementData, setProblemStatementData] =
-    useState<ProblemStatementData | null>(null)
-  const [solutionData, setSolutionData] = useState<string | null>(null)
-  const [thoughtsData, setThoughtsData] = useState<string[] | null>(null)
+    useState<ProblemStatementData | null>(null);
+  const [solutionData, setSolutionData] = useState<string | null>(null);
+  const [thoughtsData, setThoughtsData] = useState<string[] | null>(null);
   const [timeComplexityData, setTimeComplexityData] = useState<string | null>(
     null
-  )
+  );
   const [spaceComplexityData, setSpaceComplexityData] = useState<string | null>(
     null
-  )
+  );
 
-  const [isTooltipVisible, setIsTooltipVisible] = useState(false)
-  const [tooltipHeight, setTooltipHeight] = useState(0)
+  const [isTooltipVisible, setIsTooltipVisible] = useState(false);
+  const [tooltipHeight, setTooltipHeight] = useState(0);
 
-  const [isResetting, setIsResetting] = useState(false)
+  const [isResetting, setIsResetting] = useState(false);
 
   interface Screenshot {
-    id: string
-    path: string
-    preview: string
-    timestamp: number
+    id: string;
+    path: string;
+    preview: string;
+    timestamp: number;
   }
 
-  const [extraScreenshots, setExtraScreenshots] = useState<Screenshot[]>([])
+  const [extraScreenshots, setExtraScreenshots] = useState<Screenshot[]>([]);
 
   useEffect(() => {
     const fetchScreenshots = async () => {
       try {
-        const existing = await window.electronAPI.getScreenshots()
-        console.log("Raw screenshot data:", existing)
+        const existing = await window.electronAPI.getScreenshots();
+        console.log("Raw screenshot data:", existing);
         const screenshots = (Array.isArray(existing) ? existing : []).map(
           (p) => ({
             id: p.path,
             path: p.path,
             preview: p.preview,
-            timestamp: Date.now()
+            timestamp: Date.now(),
           })
-        )
-        console.log("Processed screenshots:", screenshots)
-        setExtraScreenshots(screenshots)
+        );
+        console.log("Processed screenshots:", screenshots);
+        setExtraScreenshots(screenshots);
       } catch (error) {
-        console.error("Error loading extra screenshots:", error)
-        setExtraScreenshots([])
+        console.error("Error loading extra screenshots:", error);
+        setExtraScreenshots([]);
       }
-    }
+    };
 
-    fetchScreenshots()
-  }, [solutionData])
+    fetchScreenshots();
+  }, [solutionData]);
 
-  const { showToast } = useToast()
+  const { showToast } = useToast();
 
   useEffect(() => {
     // Height update logic
     const updateDimensions = () => {
       if (contentRef.current) {
-        let contentHeight = contentRef.current.scrollHeight
-        const contentWidth = contentRef.current.scrollWidth
+        let contentHeight = contentRef.current.scrollHeight;
+        const contentWidth = contentRef.current.scrollWidth;
         if (isTooltipVisible) {
-          contentHeight += tooltipHeight
+          contentHeight += tooltipHeight;
         }
         window.electronAPI.updateContentDimensions({
           width: contentWidth,
-          height: contentHeight
-        })
+          height: contentHeight,
+        });
       }
-    }
+    };
 
     // Initialize resize observer
-    const resizeObserver = new ResizeObserver(updateDimensions)
+    const resizeObserver = new ResizeObserver(updateDimensions);
     if (contentRef.current) {
-      resizeObserver.observe(contentRef.current)
+      resizeObserver.observe(contentRef.current);
     }
-    updateDimensions()
+    updateDimensions();
 
     // Set up event listeners
     const cleanupFunctions = [
       window.electronAPI.onScreenshotTaken(async () => {
         try {
-          const existing = await window.electronAPI.getScreenshots()
+          const existing = await window.electronAPI.getScreenshots();
           const screenshots = (Array.isArray(existing) ? existing : []).map(
             (p) => ({
               id: p.path,
               path: p.path,
               preview: p.preview,
-              timestamp: Date.now()
+              timestamp: Date.now(),
             })
-          )
-          setExtraScreenshots(screenshots)
+          );
+          setExtraScreenshots(screenshots);
         } catch (error) {
-          console.error("Error loading extra screenshots:", error)
+          console.error("Error loading extra screenshots:", error);
         }
       }),
       window.electronAPI.onResetView(() => {
         // Set resetting state first
-        setIsResetting(true)
+        setIsResetting(true);
 
         // Remove queries
         queryClient.removeQueries({
-          queryKey: ["solution"]
-        })
+          queryKey: ["solution"],
+        });
         queryClient.removeQueries({
-          queryKey: ["new_solution"]
-        })
+          queryKey: ["new_solution"],
+        });
 
         // Reset screenshots
-        setExtraScreenshots([])
+        setExtraScreenshots([]);
 
         // After a small delay, clear the resetting state
         setTimeout(() => {
-          setIsResetting(false)
-        }, 0)
+          setIsResetting(false);
+        }, 0);
       }),
       window.electronAPI.onSolutionStart(() => {
         // Every time processing starts, reset relevant states
-        setSolutionData(null)
-        setThoughtsData(null)
-        setTimeComplexityData(null)
-        setSpaceComplexityData(null)
+        setSolutionData(null);
+        setThoughtsData(null);
+        setTimeComplexityData(null);
+        setSpaceComplexityData(null);
       }),
       window.electronAPI.onProblemExtracted((data) => {
-        queryClient.setQueryData(["problem_statement"], data)
+        queryClient.setQueryData(["problem_statement"], data);
       }),
       //if there was an error processing the initial solution
       window.electronAPI.onSolutionError((error: string) => {
-        showToast("Processing Failed", error, "error")
+        showToast("Processing Failed", error, "error");
         // Reset solutions in the cache (even though this shouldn't ever happen) and complexities to previous states
         const solution = queryClient.getQueryData(["solution"]) as {
-          code: string
-          thoughts: string[]
-          time_complexity: string
-          space_complexity: string
-        } | null
+          code: string;
+          thoughts: string[];
+          time_complexity: string;
+          space_complexity: string;
+        } | null;
         if (!solution) {
-          setView("queue")
+          setView("queue");
         }
-        setSolutionData(solution?.code || null)
-        setThoughtsData(solution?.thoughts || null)
-        setTimeComplexityData(solution?.time_complexity || null)
-        setSpaceComplexityData(solution?.space_complexity || null)
-        console.error("Processing error:", error)
+        setSolutionData(solution?.code || null);
+        setThoughtsData(solution?.thoughts || null);
+        setTimeComplexityData(solution?.time_complexity || null);
+        setSpaceComplexityData(solution?.space_complexity || null);
+        console.error("Processing error:", error);
       }),
       //when the initial solution is generated, we'll set the solution data to that
       window.electronAPI.onSolutionSuccess((data) => {
         if (!data) {
-          console.warn("Received empty or invalid solution data")
-          return
+          console.warn("Received empty or invalid solution data");
+          return;
         }
-        console.log({ data })
+        console.log({ data });
         const solutionData = {
           code: data.code,
           thoughts: data.thoughts,
           time_complexity: data.time_complexity,
-          space_complexity: data.space_complexity
-        }
+          space_complexity: data.space_complexity,
+        };
 
-        queryClient.setQueryData(["solution"], solutionData)
-        setSolutionData(solutionData.code || null)
-        setThoughtsData(solutionData.thoughts || null)
-        setTimeComplexityData(solutionData.time_complexity || null)
-        setSpaceComplexityData(solutionData.space_complexity || null)
+        queryClient.setQueryData(["solution"], solutionData);
+        setSolutionData(solutionData.code || null);
+        setThoughtsData(solutionData.thoughts || null);
+        setTimeComplexityData(solutionData.time_complexity || null);
+        setSpaceComplexityData(solutionData.space_complexity || null);
 
         // Fetch latest screenshots when solution is successful
         const fetchScreenshots = async () => {
           try {
-            const existing = await window.electronAPI.getScreenshots()
+            const existing = await window.electronAPI.getScreenshots();
             const screenshots =
               existing.previews?.map((p) => ({
                 id: p.path,
                 path: p.path,
                 preview: p.preview,
-                timestamp: Date.now()
-              })) || []
-            setExtraScreenshots(screenshots)
+                timestamp: Date.now(),
+              })) || [];
+            setExtraScreenshots(screenshots);
           } catch (error) {
-            console.error("Error loading extra screenshots:", error)
-            setExtraScreenshots([])
+            console.error("Error loading extra screenshots:", error);
+            setExtraScreenshots([]);
           }
-        }
-        fetchScreenshots()
+        };
+        fetchScreenshots();
       }),
 
       //########################################################
@@ -322,12 +320,12 @@ const Solutions: React.FC<SolutionsProps> = ({
       //########################################################
       window.electronAPI.onDebugStart(() => {
         //we'll set the debug processing state to true and use that to render a little loader
-        setDebugProcessing(true)
+        setDebugProcessing(true);
       }),
       //the first time debugging works, we'll set the view to debug and populate the cache with the data
       window.electronAPI.onDebugSuccess((data) => {
-        queryClient.setQueryData(["new_solution"], data)
-        setDebugProcessing(false)
+        queryClient.setQueryData(["new_solution"], data);
+        setDebugProcessing(false);
       }),
       //when there was an error in the initial debugging, we'll show a toast and stop the little generating pulsing thing.
       window.electronAPI.onDebugError(() => {
@@ -335,94 +333,87 @@ const Solutions: React.FC<SolutionsProps> = ({
           "Processing Failed",
           "There was an error debugging your code.",
           "error"
-        )
-        setDebugProcessing(false)
+        );
+        setDebugProcessing(false);
       }),
       window.electronAPI.onProcessingNoScreenshots(() => {
         showToast(
           "No Screenshots",
           "There are no extra screenshots to process.",
           "neutral"
-        )
+        );
       }),
-      window.electronAPI.onOutOfCredits(() => {
-        showToast(
-          "Out of Credits",
-          "You are out of credits. Please refill at https://www.interviewcoder.co/settings.",
-          "error"
-        )
-      })
-    ]
+    ];
 
     return () => {
-      resizeObserver.disconnect()
-      cleanupFunctions.forEach((cleanup) => cleanup())
-    }
-  }, [isTooltipVisible, tooltipHeight])
+      resizeObserver.disconnect();
+      cleanupFunctions.forEach((cleanup) => cleanup());
+    };
+  }, [isTooltipVisible, tooltipHeight]);
 
   useEffect(() => {
     setProblemStatementData(
       queryClient.getQueryData(["problem_statement"]) || null
-    )
-    setSolutionData(queryClient.getQueryData(["solution"]) || null)
+    );
+    setSolutionData(queryClient.getQueryData(["solution"]) || null);
 
     const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
       if (event?.query.queryKey[0] === "problem_statement") {
         setProblemStatementData(
           queryClient.getQueryData(["problem_statement"]) || null
-        )
+        );
       }
       if (event?.query.queryKey[0] === "solution") {
         const solution = queryClient.getQueryData(["solution"]) as {
-          code: string
-          thoughts: string[]
-          time_complexity: string
-          space_complexity: string
-        } | null
+          code: string;
+          thoughts: string[];
+          time_complexity: string;
+          space_complexity: string;
+        } | null;
 
-        setSolutionData(solution?.code ?? null)
-        setThoughtsData(solution?.thoughts ?? null)
-        setTimeComplexityData(solution?.time_complexity ?? null)
-        setSpaceComplexityData(solution?.space_complexity ?? null)
+        setSolutionData(solution?.code ?? null);
+        setThoughtsData(solution?.thoughts ?? null);
+        setTimeComplexityData(solution?.time_complexity ?? null);
+        setSpaceComplexityData(solution?.space_complexity ?? null);
       }
-    })
-    return () => unsubscribe()
-  }, [queryClient])
+    });
+    return () => unsubscribe();
+  }, [queryClient]);
 
   const handleTooltipVisibilityChange = (visible: boolean, height: number) => {
-    setIsTooltipVisible(visible)
-    setTooltipHeight(height)
-  }
+    setIsTooltipVisible(visible);
+    setTooltipHeight(height);
+  };
 
   const handleDeleteExtraScreenshot = async (index: number) => {
-    const screenshotToDelete = extraScreenshots[index]
+    const screenshotToDelete = extraScreenshots[index];
 
     try {
       const response = await window.electronAPI.deleteScreenshot(
         screenshotToDelete.path
-      )
+      );
 
       if (response.success) {
         // Fetch and update screenshots after successful deletion
-        const existing = await window.electronAPI.getScreenshots()
+        const existing = await window.electronAPI.getScreenshots();
         const screenshots = (Array.isArray(existing) ? existing : []).map(
           (p) => ({
             id: p.path,
             path: p.path,
             preview: p.preview,
-            timestamp: Date.now()
+            timestamp: Date.now(),
           })
-        )
-        setExtraScreenshots(screenshots)
+        );
+        setExtraScreenshots(screenshots);
       } else {
-        console.error("Failed to delete extra screenshot:", response.error)
-        showToast("Error", "Failed to delete the screenshot", "error")
+        console.error("Failed to delete extra screenshot:", response.error);
+        showToast("Error", "Failed to delete the screenshot", "error");
       }
     } catch (error) {
-      console.error("Error deleting extra screenshot:", error)
-      showToast("Error", "Failed to delete the screenshot", "error")
+      console.error("Error deleting extra screenshot:", error);
+      showToast("Error", "Failed to delete the screenshot", "error");
     }
-  }
+  };
 
   return (
     <>
@@ -455,7 +446,6 @@ const Solutions: React.FC<SolutionsProps> = ({
             onTooltipVisibilityChange={handleTooltipVisibilityChange}
             isProcessing={!problemStatementData || !solutionData}
             extraScreenshots={extraScreenshots}
-            credits={credits}
             currentLanguage={currentLanguage}
             setLanguage={setLanguage}
           />
@@ -525,7 +515,7 @@ const Solutions: React.FC<SolutionsProps> = ({
         </div>
       )}
     </>
-  )
-}
+  );
+};
 
-export default Solutions
+export default Solutions;
